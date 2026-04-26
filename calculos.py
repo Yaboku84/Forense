@@ -34,19 +34,39 @@ def livor_mortis(estado):
     }
     return estados.get(estado, (0, 0, "Desconocido"))
 
+def Factor_Eh(temp_amb):
+    if temp_amb <= 15.0:
+        Eh = 1.5
+    elif temp_amb <= 25.0:
+        Eh = 1.0
+    elif temp_amb <= 35.0:
+        Eh = 0.5
+    else:
+        Eh = 0.2
+    return Eh
+
+def glaiseter(temp_rect, Eh):
+    
+    hgla = (36.7 - temp_rect) * Eh
+
+    return round (hgla,2)
+
 def estimar(temp_corp, temp_amb, condicion, peso,
-            grado_rigor, estado_livor):
+            grado_rigor, estado_livor, temp_rect):
     k        = obtener_k(condicion, peso)
     t_algor  = algor_mortis(temp_corp, temp_amb, k)
     rigor    = rigor_mortis(grado_rigor)
     livor    = livor_mortis(estado_livor)
-
+    Eh       = Factor_Eh(temp_amb)
+    hgla     = glaiseter(temp_rect, Eh)
     estimaciones = []
     if t_algor:
         estimaciones.append(t_algor)
-    estimaciones.append((rigor[0] + rigor[1]) / 2)
+        estimaciones.append((rigor[0] + rigor[1]) / 2)
+        estimaciones.append((livor[0] + rigor[1]) / 2)
+        
 
-    centro   = round(sum(estimaciones) / len(estimaciones), 1)
+    centro   = round(sum(estimaciones) / len(estimaciones), 2)
     rango_lo = max(0, round(centro - 2, 1))
     rango_hi = round(centro + 2, 1)
     confianza = min(95, 60 + len(estimaciones) * 10)
@@ -59,4 +79,6 @@ def estimar(temp_corp, temp_amb, condicion, peso,
         "rango":     (rango_lo, rango_hi),
         "confianza": confianza,
         "k":         k,
+        "Eh":        Eh,
+        "hgla":      hgla
     }

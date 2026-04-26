@@ -4,9 +4,39 @@ import pandas as pd
 import math
 
 # ← Importamos nuestros propios módulos
-from calculos import estimar, obtener_k
+from calculos import estimar, obtener_k, Factor_Eh
 from database import crear_db, guardar_caso, cargar_casos, eliminar_caso
 
+if "iniciado" not in st.session_state:
+    st.session_state.iniciado = False
+
+if not st.session_state.iniciado:
+    st.markdown("<h1 style='text-align:center'>ESTIMADOR FORENSE</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align:center'>Sistema de análisis multiparamétrico</p>", unsafe_allow_html=True)
+        
+    st.divider()
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        if st.button(" Iniciar Calculadora", use_container_width=True):
+            st.session_state.iniciado = True
+            st.rerun()
+    
+    with col2:
+        st.button("🕵️ Modo Detective", use_container_width=True, disabled=True)
+        st.caption("<p style='text-align:center'>...Proximamente...</p>", unsafe_allow_html=True)
+    
+    st.divider()
+    col1, col2, col3 = st.columns([1, 2, 1])
+
+    with col2:
+        st.markdown("""
+    <div style='text-align:center'>
+        <img src='https://upload.wikimedia.org/wikipedia/commons/d/d4/True_Detective_logo.png' width='300'>
+    </div>
+    """, unsafe_allow_html=True)
+    st.stop()
 # Crear la BD al iniciar (si no existe)
 crear_db()
 
@@ -16,15 +46,17 @@ st.set_page_config(
     page_icon="🔬",
     layout="wide"
 )
-st.title(" Estimador de Tiempo de Muerte")
-st.caption("Análisis multiparamétrico · Algor, Rigor y Livor Mortis")
 
+st.title(
+    "Estimador de Tiempo de Muerte" 
+)
 # ── Sidebar ──────────────────────────────
 with st.sidebar:
     st.header("Parámetros de entrada")
 
     temp_corp = st.slider("Temperatura corporal (°C)", 20.0, 37.0, 30.0, 0.5)
-    temp_amb  = st.slider("Temperatura ambiente (°C)", 5.0, 35.0, 20.0, 0.5)
+    temp_rect = st.slider("Temperatura rectal (°C)", 20.0, 40.0, 35.0, 0.5)
+    temp_amb  = st.slider("Temperatura ambiente (°C)", 5.0, 40.0, 20.0, 0.5)
     humedad   = st.slider("Humedad (%)", 0, 100, 50)
     peso      = st.slider("Peso corporal (kg)", 40, 150, 70, 5)
 
@@ -35,10 +67,10 @@ with st.sidebar:
     ])
     grado_rigor = st.selectbox(
         "Rigor mortis",
-        ["ausente", "parcial", "completo", "cediendo"]
+        ["Ausente", "Parcial", "Completo", "Cediendo"]
     )
     estado_livor = st.selectbox(
-        "Livor mortis", ["no fijado", "fijado"]
+        "Livor mortis", ["No fijado", "Fijado"]
     )
 
     st.divider()
@@ -46,7 +78,7 @@ with st.sidebar:
     guardar_btn = st.button("💾 Guardar caso", use_container_width=True)
 
 # ── Cálculo ──────────────────────────────
-res = estimar(temp_corp, temp_amb, condicion, peso, grado_rigor, estado_livor)
+res = estimar(temp_corp, temp_amb, condicion, peso, grado_rigor, estado_livor, temp_rect)
 
 # ── Métricas ─────────────────────────────
 col1, col2, col3 = st.columns(3)
@@ -66,21 +98,27 @@ with left:
         if res["algor_h"]:
             st.metric("Estimación", f"{res['algor_h']} h")
             st.caption(f"Constante k = {res['k']} h⁻¹")
+            st.markdown("[Para conocer mas CLIK](https://www.formacionfuneraria.com/signos-positivos-de-la-muerte-algor-mortis/)", unsafe_allow_html=True)
         else:
             st.warning("Temperatura corporal ≤ ambiente.")
 
-    with st.expander(" Rigor mortis", expanded=True):
+    with st.expander(" Rigor mortis", expanded=False):
         lo, hi, desc = res["rigor"]
         st.write(desc)
         st.caption(f"Rango: {lo} – {hi} h")
 
-    with st.expander(" Livor mortis", expanded=True):
+    with st.expander(" Livor mortis", expanded=False):
         lo, hi, desc = res["livor"]
         st.write(desc)
         st.caption(f"Rango: {lo} – {hi} h")
+        
+    with st.expander(" Glaiseter ", expanded=False):
+        hgla  = res["hgla"]
+        st.metric("Estimación", f"{res['hgla']} h")
+        st.caption(f" Factor de enfriamiento= {res['Eh']}°C/h")
 
 with right:
-    st.subheader("Curva de enfriamiento")
+    st.subheader("Curva de enfriamiento (Algor Mortis)")
     if res["algor_h"]:
         horas = [i * 0.25 for i in range(121)]
         temps = [temp_amb + (37 - temp_amb) * math.exp(-res["k"] * t)
@@ -90,7 +128,7 @@ with right:
         fig.add_trace(go.Scatter(
             x=horas, y=temps, mode="lines",
             name="Temperatura corporal",
-            line=dict(color="#E24B4A", width=2.5)
+            line=dict(color="#1D289B", width=3.5)
         ))
         fig.add_hline(
             y=temp_amb, line_dash="dash", line_color="#888",
@@ -100,7 +138,7 @@ with right:
         fig.add_vrect(
             x0=max(0, res["algor_h"] - 2),
             x1=res["algor_h"] + 2,
-            fillcolor="rgba(226,75,74,0.12)",
+            fillcolor="rgba(0,0,160,0.12)",
             line_width=0,
             annotation_text="Rango estimado"
         )
@@ -121,6 +159,10 @@ st.info(
     f"la muerte ocurrió hace aprox. **{res['rango'][0]} – {res['rango'][1]} horas**. "
     f"Confianza: **{res['confianza']}%**."
 )
+st.info(
+    "Proyecto Final Lenguajes de Programación 🙏"
+)
+
 
 # ── Guardar ──────────────────────────────
 if guardar_btn:
@@ -129,7 +171,8 @@ if guardar_btn:
             "temp_corp": temp_corp, "temp_amb": temp_amb,
             "humedad": humedad, "factor_en": res["k"],
             "peso": peso, "temp_rect": temp_corp,
-            "rigor": grado_rigor, "livor": estado_livor
+            "rigor": grado_rigor, "livor": estado_livor,
+            "temp_rect": temp_rect
         }, res)
         st.sidebar.success(f" '{nombre_caso}' guardado.")
     else:
@@ -161,4 +204,3 @@ if casos:
             st.rerun()
 else:
     st.caption("Aún no hay casos guardados.")
-st.rerun()
