@@ -20,17 +20,17 @@ def algor_mortis(temp_corporal, temp_ambiente, k):
 
 def rigor_mortis(grado):
     rangos = {
-        "ausente":   (0,  3,  "Muerte muy reciente"),
-        "parcial":   (2,  8,  "Primeras horas"),
-        "completo":  (6,  14, "Varias horas"),
-        "cediendo":  (12, 36, "Más de 12 horas"),
+        "Ausente":   (0,  3,  "Muerte muy reciente"),
+        "Parcial":   (2,  8,  "Primeras horas"),
+        "Completo":  (6,  14, "Varias horas"),
+        "Cediendo":  (12, 36, "Más de 12 horas"),
     }
     return rangos.get(grado, (0, 0, "Desconocido"))
 
 def livor_mortis(estado):
     estados = {
-        "no fijado": (0, 8,  "Lividez presente, no fija"),
-        "fijado":    (8, 48, "Cuerpo no movido tras la muerte"),
+        "No fijado": (0, 8,  "Lividez presente, no fija"),
+        "Fijado":    (8, 48, "Cuerpo no movido tras la muerte"),
     }
     return estados.get(estado, (0, 0, "Desconocido"))
 
@@ -59,12 +59,17 @@ def estimar(temp_corp, temp_amb, condicion, peso,
     livor    = livor_mortis(estado_livor)
     Eh       = Factor_Eh(temp_amb)
     hgla     = glaiseter(temp_rect, Eh)
+
     estimaciones = []
     if t_algor:
         estimaciones.append(t_algor)
-        estimaciones.append((rigor[0] + rigor[1]) / 2)
-        estimaciones.append((livor[0] + rigor[1]) / 2)
-        
+
+    estimaciones.append((rigor[0] + rigor[1 ]) / 2)
+    estimaciones.append((livor[0] + livor[1]) / 2)
+    estimaciones.append(hgla)
+
+    centro = round(sum(estimaciones) / len(estimaciones), 2) if estimaciones else 0
+            
 
     centro   = round(sum(estimaciones) / len(estimaciones), 2)
     rango_lo = max(0, round(centro - 2, 1))
