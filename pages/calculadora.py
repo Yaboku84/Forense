@@ -7,18 +7,27 @@ import serial
 import time
 
 
+# Arduino — solo funciona en local, no en Streamlit Cloud
+try:
+    import serial
+    import time
+    ARDUINO_DISPONIBLE = True
+except ImportError:
+    ARDUINO_DISPONIBLE = False
+
 @st.cache_resource
 def iniciar_arduino():
+    if not ARDUINO_DISPONIBLE:
+        return None
     try:
-        
         puerto = serial.Serial(port='COM3', baudrate=9600, timeout=1)
-        time.sleep(2) 
+        time.sleep(2)
         return puerto
-    
     except Exception as e:
-        st.error(f"No se pudo conectar al Arduino: {e}")
+        st.warning(f"Arduino no conectado: {e}")
         return None
 
+arduino = iniciar_arduino()
 arduino = iniciar_arduino()
 
 from calculos import estimar, obtener_k, Factor_Eh
