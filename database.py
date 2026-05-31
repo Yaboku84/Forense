@@ -1,7 +1,14 @@
 import sqlite3
 from datetime import datetime
+import pandas as pd
 
 DB_FILE = "forense.db"
+
+def importar_desde_excel(path="historial_calculadora.xlsx"):
+    df = pd.read_excel(path)
+    conn = sqlite3.connect(DB_FILE)
+    df.to_sql("casos", conn, if_exists="append", index=False)
+    conn.close()
 
 def crear_db():
     """Crea la tabla si no existe todavía."""
@@ -28,6 +35,7 @@ def crear_db():
     """)
     conn.commit()
     conn.close()
+
 
 def guardar_caso(nombre, params, resultado):
     """Guarda un caso nuevo en la base de datos."""
@@ -68,7 +76,7 @@ def cargar_casos():
     filas = cursor.fetchall()
     columnas = [desc[0] for desc in cursor.description]
     conn.close()
-    # Convierte cada fila en un diccionario {columna: valor}
+
     return [dict(zip(columnas, fila)) for fila in filas]
 
 def eliminar_caso(caso_id):
@@ -78,3 +86,4 @@ def eliminar_caso(caso_id):
     cursor.execute("DELETE FROM casos WHERE id = ?", (caso_id,))
     conn.commit()
     conn.close()
+

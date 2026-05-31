@@ -17,9 +17,9 @@ with col1:
 
 with col2:
     st.markdown("<h1 style='text-align:center'>Integrantes</p>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align:center'>Ana Carolina Venzor Moreno</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align:center'>Ana Carolina Venzor Moreno ♡</p>", unsafe_allow_html=True)
     st.markdown("<p style='text-align:center'>Adriana Ibeth Moreno Montalvo</p>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align:center'>Alfredo Emiliano Corcuera Castañeda</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align:center'>Alfredo Emiliano Corcuera Castañeda ♡</p>", unsafe_allow_html=True)
     st.markdown("<p style='text-align:center'>Axel Gael Becerra Galliazzi</p>", unsafe_allow_html=True)
     st.markdown("<p style='text-align:center'>Juan Pablo Villaseñor Lozoya</p>", unsafe_allow_html=True)
 

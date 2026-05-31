@@ -1,17 +1,15 @@
 import streamlit as st
 import pandas as pd
 
-# ── Carga de casos ────────────────────────────────────────────────
 @st.cache_data
 def cargar_casos_detective():
     df = pd.read_excel("casos_detective.xlsx", sheet_name="Casos")
-    # Rellenar NaN en columnas de opciones con string vacío
+
     for col in ["opcion_a", "opcion_b", "opcion_c", "opcion_correcta"]:
         if col in df.columns:
             df[col] = df[col].fillna("")
     return df.to_dict("records")
 
-# ── Helpers ───────────────────────────────────────────────────────
 def tiene_opciones(caso):
     return bool(caso.get("opcion_a", "").strip())
 
@@ -30,7 +28,6 @@ COLORES_DIFICULTAD = {
     "Difícil": ("🔴", "#B71C1C"),
 }
 
-# ── Session state ─────────────────────────────────────────────────
 for key, default in [
     ("det_caso_activo", None),
     ("det_resultado", None),
@@ -40,9 +37,7 @@ for key, default in [
     if key not in st.session_state:
         st.session_state[key] = default
 
-# ══════════════════════════════════════════════════════════════════
-# PANTALLA 1 — SELECCIÓN DE CASOS
-# ══════════════════════════════════════════════════════════════════
+
 if st.session_state.det_caso_activo is None:
     col1, col2, col3 = st.columns([1, 2, 1])
     
@@ -57,13 +52,20 @@ if st.session_state.det_caso_activo is None:
     </div>
     """, unsafe_allow_html=True)
     
+    st.divider()
+    col1, col2, col3 = st.columns([1, 2, 1])
+    
+    with col1:
+        if st.button("Tutorial"):
+            st.switch_page("pages\Tutorial.py")
+          
    
     st.divider()
 
     try:
         casos = cargar_casos_detective()
     except FileNotFoundError:
-        st.error("No se encontró `casos_detective.xlsx`. Colócalo en la raíz del proyecto.")
+        st.error("No se encontró `casos_detective.xlsx`")
         st.stop()
 
     st.subheader("Selecciona un caso")
@@ -97,15 +99,11 @@ if st.session_state.det_caso_activo is None:
     if st.button("← Volver al inicio"):
         st.switch_page("pages\inicio.py")
 
-# ══════════════════════════════════════════════════════════════════
-# PANTALLA 2 — CASO ACTIVO
-# ══════════════════════════════════════════════════════════════════
 else:
     caso = st.session_state.det_caso_activo
     emoji, color = COLORES_DIFICULTAD.get(caso["dificultad"], ("⚪", "#555"))
     es_multiple = tiene_opciones(caso)
 
-    # Encabezado
     st.title(f" {caso['titulo']}")
     st.markdown(
         f"<span style='color:{color};font-weight:bold'>{emoji} {caso['dificultad']}</span>",
@@ -113,12 +111,10 @@ else:
     )
     st.divider()
 
-    # Descripción
     st.subheader(" Descripción de la escena")
     st.info(caso["descripcion"])
     st.divider()
 
-    # Datos forenses
     st.subheader(" Datos forenses")
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("🌡 Temp. rectal",   f"{caso['temp_rect']} °C")
@@ -131,7 +127,6 @@ else:
     c6.metric(" Livor mortis", caso["livor"])
     st.divider()
 
-    # Pistas
     st.subheader(" Pistas")
     p1, p2 = st.columns(2)
     with p1:
@@ -146,7 +141,6 @@ else:
             st.warning(f"**Pista 2:** {caso['pista_2']}")
     st.divider()
 
-    # ── INPUT: opción múltiple ─────────────────────────────────────
     if es_multiple:
         st.subheader(" ¿Cuándo ocurrió la muerte?")
         opciones = [
@@ -157,7 +151,7 @@ else:
         seleccion = st.radio(
             "Selecciona el rango más probable:",
             opciones,
-            index=None,          # sin selección por defecto
+            index=None,
             key="det_radio"
         )
 
@@ -178,7 +172,6 @@ else:
             else:
                 st.error(f" **Incorrecto.** La respuesta correcta era **{correcta}**.")
 
-    # ── INPUT: numérico ────────────────────────────────────────────
     else:
         st.subheader("⏱ Tu estimación")
         estimado = st.number_input(
@@ -203,7 +196,6 @@ else:
 
     st.divider()
 
-    # Navegación
     col_volver, col_menu = st.columns(2)
     with col_volver:
         if st.button("← Volver a casos", use_container_width=True):

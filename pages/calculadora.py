@@ -20,7 +20,7 @@ def iniciar_arduino():
     if not ARDUINO_DISPONIBLE:
         return None
     try:
-        puerto = serial.Serial(port='COM3', baudrate=9600, timeout=1)
+        puerto = serial.Serial(port='COM5', baudrate=9600, timeout=1)
         time.sleep(2)
         return puerto
     except Exception as e:
